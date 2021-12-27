@@ -5,6 +5,10 @@ from PIL import Image, ImageTk
 import csv
 import os
 from pathlib import Path
+import requests
+import shutil
+from packaging import version
+import sys
 
 #GLOBAL
 data = {}
@@ -40,10 +44,9 @@ def addfile(root):
     file = fd.askopenfilename()
     _, ext = os.path.splitext(file)
     if (not file) or (ext != ".csv"):
-        create_error(root, "Please use a valid file.")
+        create_error("Please use a valid file.")
         return
 
-    
     clear(root)
 
     with open(file, mode="r", encoding="utf-8-sig") as c:
@@ -110,19 +113,40 @@ def clear(root):
         if not isinstance(ele, tk.Button):
             ele.destroy()
 
-def create_error(root, msg):
+def create_error(msg):
     messagebox.showerror("Error", msg)
 
+def download_file():
+    version = open('version.txt').read()
+    url = f"https://github.com/HametAk/TournamentCalculator/releases/download/{version}/tourney.exe"
+    local_filename = f"tourney_{version}.exe"
+    with requests.get(url, stream=True) as r:
+        with open(local_filename, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
 
+def check_version():
+    check = messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended.")
+    if check and (version.parse(open("version.txt").read()) < requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")):
+        download_file()
+        messagebox.showinfo("Press Ok to finish your installation.")
+        sys.exit()
 
+    
+    
+
+    
 
 def main(root):
     root.configure(background=COLOR)
     root.geometry("600x600")
     root.resizable(False, False)
-    
+
     tk.Button(root, text="Add",command=lambda: addfile(root)).grid(sticky="we")
     root.grid_columnconfigure(0, weight=1)
+
+    #check for Updates
+    check_version()
+
     root.mainloop()
 
 if __name__ == "__main__":
