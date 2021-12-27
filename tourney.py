@@ -124,15 +124,15 @@ def download_file():
             shutil.copyfileobj(r.raw, f)
 
 def check_version():
-    check = messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended.")
     version = open("version.txt").read()
     tag = requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")
-    if check and (vs.parse(version) < vs.parse(tag)):  
-        download_file()
-        with open("version.txt", "w") as v:
-            v.write(tag)
-        messagebox.showinfo("Press Ok to finish your installation.")
-        sys.exit()
+    if vs.parse(version) < vs.parse(tag):
+        if messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended."):
+            download_file()
+            with open("version.txt", "w") as v:
+                v.write(tag)
+            messagebox.showinfo("Press Ok to finish your installation.")
+            sys.exit()
 
 def main(root):
     root.configure(background=COLOR)
