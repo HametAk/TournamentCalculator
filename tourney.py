@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog as fd
+from tkinter import messagebox
 from PIL import Image, ImageTk
 import csv
 import os
@@ -36,8 +37,12 @@ TEXT_COLOR = "white" if COLOR == "#333" else "black"
 
 def addfile(root):
     global data
-    if not (file := fd.askopenfilename()):
-        return None
+    file = fd.askopenfilename()
+    _, ext = os.path.splitext(file)
+    if (not file) or (ext != ".csv"):
+        create_error(root, "Please use a valid file.")
+        return
+
     
     clear(root)
 
@@ -81,6 +86,7 @@ def addfile(root):
 
 def open_img(frame, row):
     #creating Image
+
     static = os.path.join(Path(__file__).parent, "static")
     path_to_img = os.path.join(static, row.get('character') + ".png")
     img = Image.open(path_to_img)
@@ -104,10 +110,15 @@ def clear(root):
         if not isinstance(ele, tk.Button):
             ele.destroy()
 
+def create_error(root, msg):
+    messagebox.showerror("Error", msg)
+
+
+
+
 def main(root):
     root.configure(background=COLOR)
     root.geometry("600x600")
-    #root.geometry("1920x1080")
     root.resizable(False, False)
     
     tk.Button(root, text="Add",command=lambda: addfile(root)).grid(sticky="we")
