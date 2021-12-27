@@ -86,7 +86,6 @@ def addfile(root):
 
         counter +=1
     
-
 def open_img(frame, row):
     #creating Image
 
@@ -126,15 +125,13 @@ def download_file():
 
 def check_version():
     check = messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended.")
-    if check and (version.parse(open("version.txt").read()) < requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")):
+    tag = requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")
+    if check and (version.parse(open("version.txt").read()) < version.parse(tag)):
         download_file()
+        with open("version.txt", "w") as v:
+            v.write(tag)
         messagebox.showinfo("Press Ok to finish your installation.")
         sys.exit()
-
-    
-    
-
-    
 
 def main(root):
     root.configure(background=COLOR)
