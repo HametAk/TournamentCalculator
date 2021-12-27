@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import requests
 import shutil
-from packaging import version
+from packaging import version as vs
 import sys
 
 #GLOBAL
@@ -125,8 +125,9 @@ def download_file():
 
 def check_version():
     check = messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended.")
+    version = open("version.txt").read()
     tag = requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")
-    if check and (version.parse(open("version.txt").read()) < version.parse(tag)):
+    if check and (vs.parse(version) < vs.parse(tag)):  
         download_file()
         with open("version.txt", "w") as v:
             v.write(tag)
