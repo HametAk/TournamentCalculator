@@ -124,7 +124,8 @@ def download_file():
             shutil.copyfileobj(r.raw, f)
 
 def check_version():
-    version = open("version.txt").read()
+    version_file = os.path.join(Path(__file__).parent, "version.txt")
+    version = open(version_file).read()
     tag = requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")
     if vs.parse(version) < vs.parse(tag):
         if messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended."):
