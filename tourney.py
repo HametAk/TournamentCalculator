@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter import messagebox
+from tkinterdnd2 import *
 from PIL import Image, ImageTk
 import csv
 import os
@@ -9,6 +10,8 @@ import requests
 import shutil
 from packaging import version as vs
 import sys
+
+import tkinterdnd2
 
 #GLOBAL
 data = {}
@@ -39,15 +42,13 @@ COLOR = "#333" #or "white"
 TEXT_COLOR = "white" if COLOR == "#333" else "black"
 
 
-def addfile(root):
+def addfile(event, root):
     global data
-    file = fd.askopenfilename()
+    file = event.data
     _, ext = os.path.splitext(file)
     if (not file) or (ext != ".csv"):
         create_error("Please use a valid file.")
         return
-
-    clear(root)
 
     with open(file, mode="r", encoding="utf-8-sig") as c:
         reader = csv.DictReader(c)
@@ -56,8 +57,6 @@ def addfile(root):
             row = {k.strip():v.strip() for k,v in row.items()}
             points = int(row.get("kill")) * kill_points + placement_points.get(row.get("rank"))
 
-            frame = tk.Frame(root)
-            frame.configure(background=COLOR, borderwidth=2)
             
             if check:
                 nickname = row.get("nickname")
@@ -67,25 +66,50 @@ def addfile(root):
                 data[row.get("nickname")] = {
                                             "points": points,
                                             "row": [row],
+                                            "manual": 0
                                             }
+        
+    create_frame(root)
+
+def create_frame(root):
+    global data
+    clear(root)
+
     data = {k:v for k,v in sorted(data.items(), key=lambda item:item[1].get("points"), reverse=True)}
     counter, counter2 = 0, 0
-    frame.grid()
+    
     for k, v in data.items():
         if counter >= 9:
-            counter, counter2 = 0, 1
-        
-        insideFrame = tk.Frame(frame)
+            counter, counter2 = 0, 1     
+        insideFrame = tk.Frame(root)
         insideFrame.configure(background=COLOR, highlightbackground=TEXT_COLOR, highlightthickness=1)
         insideFrame.grid(sticky="w", row=counter, column=counter2, padx=50)
+
         column = 0
         for img in v.get("row"):
-           open_img(insideFrame, img).grid(row=0, column=column, columnspan=1, sticky="w")
+           open_img(insideFrame, img).grid(row=counter, column=column, columnspan=1, sticky="w")
            column += 1
-        open_text(insideFrame, k, v.get("points")).grid(columnspan=len(v.get("row")))
+        l = open_text(insideFrame, k)
+        l.bind("<Button-1>", lambda event, x=root, y=k: increment(event, x, y))
+        l.bind("<Button-3>", lambda event, x=root, y=k: decrement(event, x, y))
+        l.grid(columnspan=len(v.get("row")))
 
         counter +=1
+
+
+def increment(event, root, name):
+    global data
+    data[name]["points"] += 1
+    data[name]["manual"] += 1
+    create_frame(root)
     
+
+def decrement(event, root, name):
+    global data
+    data[name]["points"] -= 1
+    data[name]["manual"] -= 1
+    create_frame(root)
+
 def open_img(frame, row):
     #creating Image
 
@@ -101,8 +125,8 @@ def open_img(frame, row):
 
     return lbl_img
 
-def open_text(frame, name, points):
-    lbl_text = tk.Label(frame, text=f'{name} with {points} points')
+def open_text(frame, name):
+    lbl_text = tk.Label(frame, anchor="w", text=f'{name} with {data[name]["points"]} points\nManual points added: {data[name]["manual"]}')
     lbl_text.configure(background=COLOR, foreground=TEXT_COLOR)
 
     return lbl_text
@@ -127,6 +151,8 @@ def check_version():
     version_file = os.path.join(Path(__file__).parent, "version.txt")
     version = open(version_file).read()
     tag = requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")
+    if not tag:
+        return
     if vs.parse(version) < vs.parse(tag):
         if messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended."):
             download_file()
@@ -137,17 +163,19 @@ def check_version():
 
 def main(root):
     root.configure(background=COLOR)
-    root.geometry("600x600")
+    root.geometry("700x700")
     root.resizable(False, False)
 
-    tk.Button(root, text="Add",command=lambda: addfile(root)).grid(sticky="we")
-    root.grid_columnconfigure(0, weight=1)
-
+    f = tk.Frame(root, height=700, width=700, background=COLOR, highlightbackground=TEXT_COLOR)
+    f.pack()
+    f.drop_target_register(DND_FILES)
+    f.dnd_bind('<<Drop>>', lambda event, x=f: addfile(event, x))
+    
     #check for Updates
     check_version()
 
     root.mainloop()
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = tkinterdnd2.Tk()
     main(root)
