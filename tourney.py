@@ -176,5 +176,6 @@ def main(root):
     root.mainloop()
 
 if __name__ == "__main__":
-    root = tkinterdnd2.Tk()
-    main(root)
+    print(open("./version.txt").read())
+    #root = tkinterdnd2.Tk()
+    #main(root)
