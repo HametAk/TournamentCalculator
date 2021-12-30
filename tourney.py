@@ -39,6 +39,7 @@ kill_points = 4
 
 COLOR = "#333" #or "white"
 TEXT_COLOR = "white" if COLOR == "#333" else "black"
+version_file = os.path.join(Path(__file__).parent, "vs.txt")
 
 
 def addfile(event, root):
@@ -139,7 +140,7 @@ def create_error(msg):
     messagebox.showerror("Error", msg)
 
 def download_file():
-    version = open('version.txt').read()
+    version = open(version_file).read()
     url = f"https://github.com/HametAk/TournamentCalculator/releases/download/{version}/tourney.exe"
     local_filename = f"tourney_{version}.exe"
     with requests.get(url, stream=True) as r:
@@ -147,16 +148,16 @@ def download_file():
             shutil.copyfileobj(r.raw, f)
 
 def check_version():
-    version = open("./version.txt").read()
+    version = open(version_file).read()
     tag = requests.get("https://api.github.com/repos/HametAk/TournamentCalculator/releases/latest").json().get("tag_name")
     if not tag:
         return
     if vs.parse(version) < vs.parse(tag):
         if messagebox.askyesno("Update?", "Do you want to update this program? It is highly recommended."):
-            download_file()
-            with open("version.txt", "w") as v:
+            with open(version_file, "w") as v:
                 v.write(tag)
-            messagebox.showinfo("Press Ok to finish your installation.")
+            download_file()
+            messagebox.showinfo(message="Press Ok to finish your installation.")
             sys.exit()
 
 def main(root):
